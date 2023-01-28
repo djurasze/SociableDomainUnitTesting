@@ -61,7 +61,10 @@ In order to tackle the problems mentioned, the following three goals should be a
 - Improve performance by reducing the need for initializing context for each test and using shared configuration when possible.
 
 
-I provided examples that are implemented in Java and Spring Boot framework. Additionally, I applied the Hexagonal architecture as a method of code arrangement and Domain-Driven Design (DDD) as it can be a good fit for cases with complex business logic.
+Examples given in this text are implemented in Java and Spring Boot 
+framework. Additionally, I applied the Hexagonal architecture as a
+method of code arrangement and Domain-Driven Design (DDD) as it 
+can be a good fit for cases with complex business logic.
 
 ## Hexagonal architecture and DDD
 
