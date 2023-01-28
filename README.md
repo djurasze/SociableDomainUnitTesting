@@ -2,7 +2,10 @@
 
 ## Introduction
 
-In this article, I want to talk about some challenges that can come up when testing domain logic. My focus will be on potential problems that can occur in projects that have a more complicated business domain
+In this article, I want to discuss some challenges that can 
+come up when testing domain logic. More precisely, I will
+concentrate on potential problems that can occur in projects 
+that have a more complicated business domain.
 
 Testing is a broad topic with many nuances, so here i will 
 only focus on a single 
