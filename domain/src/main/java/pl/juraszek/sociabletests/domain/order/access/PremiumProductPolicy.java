@@ -2,21 +2,19 @@ package pl.juraszek.sociabletests.domain.order.access;
 
 import io.vavr.control.Either;
 import pl.juraszek.sociabletests.domain.client.Client;
-import pl.juraszek.sociabletests.domain.order.Order;
+import pl.juraszek.sociabletests.domain.order.product.Product;
 
 import java.util.List;
 
-public class PremiumProductPolicy implements ProductAccessPolicy{
+public class PremiumProductPolicy implements ProductAccessPolicy {
 
-   private static final List<String> PREMIUM_PRODUCTS = List.of(
-      "premium_1",
-      "premium_2"
-   );
+   private static final List<String> PREMIUM_PRODUCTS = List.of("premium_1", "premium_2");
 
    @Override
-   public Either<ProductAccessException, Boolean> check(Order order, Client client) {
-      if (isPremium(order) && !hasPremiumSubscription(client)) {
-         return Either.left(new ProductAccessException(String.format("Client %s cannot order premium product %s", client.name(), order.getProductId())));
+   public Either<ProductAccessException, Boolean> check(Product product, Client client) {
+      if (isPremium(product) && !hasPremiumSubscription(client)) {
+         return Either.left(new ProductAccessException(
+               String.format("Client %s cannot access premium product %s", client.name(), product.productId()), product.productId()));
       }
       return Either.right(true);
    }
@@ -25,7 +23,7 @@ public class PremiumProductPolicy implements ProductAccessPolicy{
       return client.hasPremiumSubscription();
    }
 
-   private boolean isPremium(Order order) {
-      return PREMIUM_PRODUCTS.contains(order.getProductId());
+   private boolean isPremium(Product product) {
+      return PREMIUM_PRODUCTS.contains(product.productId());
    }
 }
