@@ -2,72 +2,79 @@
 
 ## Introduction
 
-In this article, I want to discuss some challenges that can 
+In this article, I want to discuss some challenges which can 
 come up when testing domain logic. More precisely, I will
-concentrate on potential problems that can occur in projects 
-that have a more complicated business domain.
+concentrate on potential problems which can occur in projects 
+with complex business domain.
 
 Testing is a broad topic with many nuances, so here I will 
 only focus on a single 
-pattern called "Sociable Unit Testing".
-While it may not be as widely recognized, it can still serve as a valuable alternative to traditional unit tests.
+pattern called "Sociable Unit Testing."
+While it may not be as widely recognized, it can still 
+serve as a valuable alternative to traditional unit tests.
 However, 
 like with many things, there is no one-size-fits-all 
-solution that can solve all problems. Our decisions often 
-have drawbacks. The key is to choose the appropriate method 
+solution which can solve all problems. We need to consider the drawbacks.
+The key is to choose the appropriate method 
 for the specific use case and be mindful of the trade-offs. 
-This can be achieved by thoroughly analyzing the pros and 
+This can be achieved by a thorough analysis of the pros and 
 cons of a given approach and, more importantly, 
-by understanding how it aligns with our use case.
+through understanding of how the chosen solution aligns with 
+the specific use case.
 
 
-## Problems
+## Potential Issues
 
 As the codebase grows, some solutions that were once sufficient
 may become difficult to maintain. For instance, in a project
-where new requirements are frequently added, and existing code
+where new requirements are frequently being added, and existing code
 is often modified, maintaining tests can become a challenge. 
-When there are many solitary unit tests, changing the code 
-can result in the need to update a large number of them. 
+When there are many solitary unit tests, changing the code
+may require updating a large number of such tests.
 This can occur when most unit tests are fully isolated, 
 meaning they are completely separated from surrounding 
 dependencies and only interact with mocks.
 
-This approach helps us to create truly independent tests, 
-but it comes at a significant cost. We must write and 
+Solitary tests approach allows us to create independent 
+tests, but it comes at a significant cost. We must write and 
 maintain mocks and their contracts, which can become 
 overwhelming as the number of tests and code changes increase.
 Additionally, having too many isolated tests can lead to another
-issue: keeping mocks up to date. 
-It requires a lot of discipline and understanding of the 
+issue, that is, keeping mocks up to date. 
+It takes a lot of discipline and understanding of the 
 current code to spot inconsistencies in a frequently 
 changing codebase, and when these inconsistencies occur, 
 it means that our tests no longer accurately reflect the 
 real logic.
 
-Another problem is the speed of creating new tests. 
+It is worth to highlight that creating new tests is 
+time-consuming process.
 As mentioned before, writing isolated tests requires 
-creating an independent environment for the tests, 
-and each time mocks must be prepared, which takes time.
+creating an independent environment, 
+and each time mocks must be prepared for such tests.
 
 ## Goals
 
-The requirements of a project can vary, and different solutions may be appropriate for different scenarios. Some patterns may work well for complex domains and be an overkill for simpler domains that may focus more on infrastructure. In my opinion, the approach of sociable testing is better suited for systems with complex domains. However, it should be noted that this approach may not be limited to this specific scenario.
+The requirements of a project can vary, and different solutions 
+may be appropriate for different scenarios. 
+Some patterns may work well for complex domains but can be an 
+overkill for simpler domains (e.g. infrastructure focused applications).
+In my opinion, the approach of sociable testing is better suited 
+for systems with complex domains. However, it should be noted 
+that this approach may not be limited to this specific scenario.
 
-In order to tackle the problems mentioned, the following three goals should be achieved:
+In the context of complex domain application we should consider these three aspects:
 
-- Make maintenance easier by reducing the number of mocks and stubs contracts, leading to fewer configurations and updates on a single test level
-- Improve reliability by using real code interactions instead of inconsistent mock contracts
-- Improve performance by reducing the need for initializing context for each test and using shared configuration when possible.
-
-
+- **Simplify The Maintenance.** You can do it by reducing the number of mocks and stubs contracts, leading to fewer configurations and updates on a single test level.
+- **Strengthen Reliability.** Use real code interactions instead of inconsistent mock contracts.
+- **Improve Performance.** Reduce the need for initializing context for each test and use shared configuration whenever possible.
 
 
-## Hexagonal architecture and DDD
+## Hexagonal Architecture and Domain-Driven Design
 
 Examples given in this text are implemented in Java and Spring Boot
-framework. Additionally, I applied the Hexagonal architecture as a
-method of code arrangement and Domain-Driven Design (DDD) as it
+framework. Additionally, I applied the Hexagonal Architecture as a
+method of code arrangement and Domain-Driven Design (DDD), as it
 can be a good fit for cases with complex business logic. However, I don't want to delve
 too deeply into these specific concepts, as they are alternative 
 approaches and sociable tests can also be effectively applied to 
@@ -75,34 +82,29 @@ more traditional methods.
 For more information on these topics, you can easily find resources online.
 <figure>
 <img src="./doc/hexagonal_architecture.svg" alt="Hexagonal Architecture" style="width:100%">
-<figcaption align = "center"><b>Hexagonal architecture overview</b></figcaption>
+<figcaption align = "center"><b>Fig. 1. Hexagonal Architecture Overview</b></figcaption>
 </figure>
 
 Furthermore, I want to focus only on testing the domain and application layers.
 
 <figure>
 <img src="./doc/hexagonal_architecture_focus.svg" alt="Hexagonal Architecture" style="width:100%">
-<figcaption align = "center"><b>Hexagonal architecture focus</b></figcaption>
+<figcaption align = "center"><b>Fig. 2. Hexagonal Architecture Focus</b></figcaption>
 </figure>
 
 
 
-## Sociable Tests
+## Solitary vs. Sociable Tests
 
-As I mentioned earlier, solitary tests have drawbacks and 
-come at a cost. In comparison, sociable tests 
-can help us achieve the goals discussed earlier, 
-but also have their own issues that need to be addressed.
-
-In the case of isolated tests, mocks are typically required 
-at some point. When using Domain-Driven Design (DDD), 
-the domain is often complex, and our logic will have many 
+In the case of solitary tests, mocks are typically required 
+at some point. When using DDD, the domain is often complex, and our logic will have many 
 relationships. 
 
 For example, a solitary test for application service
-will likely become a mock ceremony, 
-where a significant amount of time and effort
-is spent creating and maintaining mocks to isolate the test.
+will likely become a mock ceremony.
+This results in spending a lot of time and energy on
+creating and maintaining mocks, rather than focusing on 
+testing the core logic of the service.
 
 ```
 
@@ -200,13 +202,13 @@ an aggregate.
 
 <figure>
 <img src="./doc/DDD_relations.svg" alt="DDD relationships" style="width:100%">
-<figcaption align = "center"><b>DDD relationships</b></figcaption>
+<figcaption align = "center"><b>Fig. 3. DDD Relationships</b></figcaption>
 </figure>
 
 
 <figure>
 <img src="./doc/solitary_test.svg" alt="Solitary tests" style="width:100%">
-<figcaption align = "center"><b>Solitary tests in case of DDD</b></figcaption>
+<figcaption align = "center"><b>Fig. 4. Solitary Tests In Case of DDD</b></figcaption>
 </figure>
 
 For that reason, it may be more practical to change the 
@@ -231,7 +233,7 @@ initialize `ProductAccessPolicy` only once.
 
 Although this approach seems to be quite practical, it
 has some issues. For that reason, we have to address a
-few problems from the beginning to avoid unnecessary
+few problems to avoid unnecessary
 complications in later stages.
 
 ### Overlapping tests
@@ -259,10 +261,13 @@ our tests.
 
 <figure>
 <img src="./doc/overlapping_tests.svg" alt="Overlapping tests" style="width:100%">
-<figcaption align = "center"><b>Overlapping tests</b></figcaption>
+<figcaption align = "center"><b>Fig. 5. Overlapping Tests</b></figcaption>
 </figure>
 
-As seen in the picture above, we have the basic unit test for a value object, which is then utilized by the entity, aggregate, and so forth.
+As shown in the picture above, we have the basic unit
+test for a value object, which is 
+then used by the entity, aggregate, and so on.
+
 ### Easily visible behavior
 
 Another thing that can improve our tests is the idea of easily visible behavior. In order to effectively test our unit of code, we do not want to look inside that code. With mocks, it is tempting to prove validity using mock verification. In our approach, we try to avoid that because it is hard to maintain in the long run. When changes occur inside our code, we will be forced to rewrite our tests. Instead of doing that, it is better to write the code in such a way that it is easy to check the behavior by using the returned data from the tested method or by using some publicly accessible getters.
@@ -309,9 +314,9 @@ state of the aggregate.
 
 When writing sociable unit tests, it's important to think about 
 how changes in the system might affect our test assertions.
-To minimize the need to update assertions for unrelated tests,
-we can use data returned from the dependencies we interact with
-during the test instead of hard-coding expected results. 
+We can reduce the amount of updates needed for unrelated tests 
+by using actual data returned from the dependencies that we 
+interact with during the test, instead of manually coding expected results.
 This approach can help us keep our tests more maintainable
 in the long run. 
 
@@ -362,12 +367,14 @@ Replacing mock objects with actual dependencies helped us
 to solve problems that we had previously encountered. 
 But we only made this change in our domain and application 
 layers. When it comes to infrastructure, it's a bit more 
-complicated. We don't want to use our actual infrastructure 
-code in our domain unit tests for a number of reasons. 
-The main one being that this code often interacts with 
-external systems like databases and web services, 
-which would mean we would need to set those systems up 
-for our tests. Additionally, infrastructure can be slow
+complicated. 
+
+There are several reasons why we should avoid 
+using actual infrastructure code in our domain unit tests. 
+One of the most significant is that it often interacts with
+external systems such as databases and web services,
+requiring us to set up those systems for testing purposes.
+Additionally, infrastructure can be slow
 and unreliable, so using it in our unit tests would make 
 them slow and unpredictable as well. So, it's better to 
 completely separate our infrastructure by using mock objects 
@@ -376,15 +383,15 @@ or something called "nullable infrastructure."
 
 <figure>
 <img src="./doc/infra_mock.svg" alt="Infrastructure mock" style="width:100%">
-<figcaption align = "center"><b>Infrastructure mock</b></figcaption>
+<figcaption align = "center"><b>Fig. 6. Infrastructure Mock</b></figcaption>
 </figure>
 
 While using mocks in our tests to isolate infrastructure 
 is a valid solution, it may be worth considering using 
 special stub implementations in our application layer code
 instead. By doing this, our infrastructure stubs become 
-first-class citizens and it becomes less likely that they
-will become out of sync with the actual code. 
+first-class citizens and are less likely to fall out of 
+sync with the actual code. 
 Also, as valid and real implementations, these stubs can be shared
 between tests and can also be used to start the application 
 in an infrastructure-disabled mode. 
@@ -413,8 +420,8 @@ public class ClientMockConfiguration {
 
 ### Context sharing
 
-Creating sociable  tests will require initializing all 
-dependencies for the logic being tested.
+Writing sociable tests involves setting up all 
+the dependencies needed for the logic being tested.
 To simplify this process, we can utilize the features 
 of Spring Test. By creating our own test slice, 
 we can initialize our domain, application, and nullable
@@ -431,11 +438,11 @@ access to the entire domain for our unit tests.
 public @interface SociableDomainTest {
 }
 ```
-With this custom annotation, we 
-can create our domain unit tests when 
-certain dependencies are needed. 
+With this custom annotation, we can easily set 
+up our sociable tests that require additional 
+domain dependencies.
 It's worth noting that in this case, 
-Spring will only initialize the context once.
+Spring will initialize the context only once.
 
 ```
 @SociableDomainTest
@@ -498,7 +505,7 @@ Therefore, it is recommended to always revert any
 modifications made during a test run, to ensure that the
 context stays consistent. 
 This is best achieved by using cleanup methods or by 
-resetting the state of any external resources used during
+resetting the state of any external resource used during
 the test.
 
 ## Cons
@@ -506,9 +513,11 @@ the test.
 While sociable tests may seem like the way to go, 
 they do have some drawbacks. One of them is the potential 
 to create overly complex logic with too many responsibilities.
-With solitary tests, we can catch this more quickly because 
-of the need to write mocks. In the case of sociable tests, 
+Solitary tests, on the other hand, make it easier to identify
+this issue due to the requirement of creating mock objects. 
+In the case of sociable tests, 
 this can be hidden by our shared configuration.
+
 One of the advantages of testing, in addition to verifying the correctness of our code, is that it helps ensure our code is well-designed by encouraging us to properly organize it into modular components. 
 For this reason, it's even more desirable to try writing 
 our logic according to test driven development [TDD] 
