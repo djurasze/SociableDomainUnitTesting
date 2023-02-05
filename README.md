@@ -7,7 +7,7 @@ come up when testing domain logic. More precisely, I will
 concentrate on potential problems that can occur in projects 
 that have a more complicated business domain.
 
-Testing is a broad topic with many nuances, so here i will 
+Testing is a broad topic with many nuances, so here I will 
 only focus on a single 
 pattern called "Sociable Unit Testing".
 While it may not be as widely recognized, it can still serve as a valuable alternative to traditional unit tests.
@@ -25,7 +25,7 @@ by understanding how it aligns with our use case.
 
 As the codebase grows, some solutions that were once sufficient
 may become difficult to maintain. For instance, in a project
-where new requirements are frequently added and existing code
+where new requirements are frequently added, and existing code
 is often modified, maintaining tests can become a challenge. 
 When there are many solitary unit tests, changing the code 
 can result in the need to update a large number of them. 
@@ -61,14 +61,17 @@ In order to tackle the problems mentioned, the following three goals should be a
 - Improve performance by reducing the need for initializing context for each test and using shared configuration when possible.
 
 
-Examples given in this text are implemented in Java and Spring Boot 
-framework. Additionally, I applied the Hexagonal architecture as a
-method of code arrangement and Domain-Driven Design (DDD) as it 
-can be a good fit for cases with complex business logic.
+
 
 ## Hexagonal architecture and DDD
 
-In this article, I have given examples of tests for an application that is built using Domain-Driven Design (DDD) and organized using a hexagonal architecture. However, I don't want to go into too much detail about these specific concepts as they are alternative approaches to traditional methods. Sociable tests can also be used successfully in these traditional cases. 
+Examples given in this text are implemented in Java and Spring Boot
+framework. Additionally, I applied the Hexagonal architecture as a
+method of code arrangement and Domain-Driven Design (DDD) as it
+can be a good fit for cases with complex business logic. However, I don't want to delve
+too deeply into these specific concepts, as they are alternative 
+approaches and sociable tests can also be effectively applied to 
+more traditional methods.
 For more information on these topics, you can easily find resources online.
 <figure>
 <img src="./doc/hexagonal_architecture.svg" alt="Hexagonal Architecture" style="width:100%">
@@ -88,7 +91,7 @@ Furthermore, I want to focus only on testing the domain and application layers.
 
 As I mentioned earlier, solitary tests have drawbacks and 
 come at a cost. In comparison, sociable tests 
-can help us achieve the goals discussed earlier 
+can help us achieve the goals discussed earlier, 
 but also have their own issues that need to be addressed.
 
 In the case of isolated tests, mocks are typically required 
@@ -196,8 +199,8 @@ an aggregate.
 
 
 <figure>
-<img src="./doc/DDD_relations.svg" alt="DDD relations" style="width:100%">
-<figcaption align = "center"><b>DDD relations</b></figcaption>
+<img src="./doc/DDD_relations.svg" alt="DDD relationships" style="width:100%">
+<figcaption align = "center"><b>DDD relationships</b></figcaption>
 </figure>
 
 
@@ -213,7 +216,7 @@ rather than mocking everything around.
 By doing this, we can focus on a single unit like a class,
 but interact with reliable and real code. 
 This approach helps reduce the amount of mock configuration. 
-For example, our test for the OrderService class will have
+For example, our test for the `OrderService` class will have
 fewer mocks. Additionally, the test will be more reliable,
 because we will test real domain code and how it influences
 orchestration. In comparison, in the previous approach,
@@ -224,9 +227,9 @@ unreliable tests.
 
 Furthermore, we can reuse our dependencies in other tests,
 for example, by reusing the Spring Context, we can 
-initialize ProductAccessPolicy only once.
+initialize `ProductAccessPolicy` only once.
 
-Although this approach seems to be quite practical it
+Although this approach seems to be quite practical, it
 has some issues. For that reason, we have to address a
 few problems from the beginning to avoid unnecessary
 complications in later stages.
