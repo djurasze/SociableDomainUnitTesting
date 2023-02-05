@@ -236,7 +236,7 @@ has some issues. For that reason, we have to address a
 few problems to avoid unnecessary
 complications in later stages.
 
-### Overlapping tests
+### Overlapping Tests
 Firstly, in case of sociable tests, to some extent, 
 our tests become redundant. It means that by testing 
 the application service, we implicitly test our domain. 
@@ -247,12 +247,15 @@ in our tests. For example, a small bug in our value object
 logic will produce fails in multiple tests which use this
 class. It is not necessarily a bad thing, but it can lead 
 to confusion, and it makes it harder to spot the source 
-of the problem. That's why it is useful to design our 
+of the problem. 
+
+That's why it is useful to design our 
 tests in the form of overlapping sociable tests. 
 It means that we start testing our code beginning 
 from the most basic, independent units and then gradually
 expand our tests to cover more advanced classes that
 interact with previously tested dependencies. 
+
 Thanks to that method, in case of a bug, we can 
 start fixing our code beginning from the most basic 
 unit that failed. It is very probable that a single
@@ -268,7 +271,7 @@ As shown in the picture above, we have the basic unit
 test for a value object, which is 
 then used by the entity, aggregate, and so on.
 
-### Easily visible behavior
+### Easily Visible Behavior
 
 Another thing that can improve our tests is the idea of easily visible behavior. In order to effectively test our unit of code, we do not want to look inside that code. With mocks, it is tempting to prove validity using mock verification. In our approach, we try to avoid that because it is hard to maintain in the long run. When changes occur inside our code, we will be forced to rewrite our tests. Instead of doing that, it is better to write the code in such a way that it is easy to check the behavior by using the returned data from the tested method or by using some publicly accessible getters.
 
@@ -310,7 +313,7 @@ the behavior of our aggregate without having to
 look inside the code and validate the internal 
 state of the aggregate.
 
-### Collaborator based isolation
+### Collaborator Based Isolation
 
 When writing sociable unit tests, it's important to think about 
 how changes in the system might affect our test assertions.
@@ -418,7 +421,7 @@ public class ClientMockConfiguration {
 }
 ```
 
-### Context sharing
+### Context Sharing
 
 Writing sociable tests involves setting up all 
 the dependencies needed for the logic being tested.
@@ -520,7 +523,7 @@ this can be hidden by our shared configuration.
 
 One of the advantages of testing, in addition to verifying the correctness of our code, is that it helps ensure our code is well-designed by encouraging us to properly organize it into modular components. 
 For this reason, it's even more desirable to try writing 
-our logic according to test driven development [TDD] 
+our logic according to test driven development (TDD) 
 in order to guide us towards better code design and decoupling.
 
 Another problem that can arise with testing is the duplication
@@ -545,7 +548,7 @@ alternative to traditional unit tests, as it can improve
 maintenance, reliability, and performance by reducing the 
 number of mocks and stubs contracts, using real code
 interactions, and reducing the need for initializing 
-context for each test.However, it's important to be aware 
+context for each test. However, it's important to be aware 
 of the potential downsides of sociable tests, such as the
 risk of creating overly complex logic and the repetition of 
 testing certain parts of the code.
