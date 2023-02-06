@@ -22,7 +22,7 @@ public class OrderController {
    @PostMapping
    public OrderDto order(@RequestBody @Valid OrderDto orderDto) {
       log.info("Creating order {}", orderDto);
-      var order = orderService.makeOrder(ProductDto.convert(orderDto.products()), orderDto.clientId());
+      var order = orderService.placeOrder(ProductDto.convert(orderDto.products()), orderDto.clientId());
       return OrderDto.of(order);
    }
 

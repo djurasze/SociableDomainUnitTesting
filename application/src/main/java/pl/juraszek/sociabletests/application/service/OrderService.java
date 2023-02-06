@@ -3,6 +3,7 @@ package pl.juraszek.sociabletests.application.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import pl.juraszek.sociabletests.domain.client.Client;
 import pl.juraszek.sociabletests.domain.client.ClientAccessException;
 import pl.juraszek.sociabletests.domain.client.ClientProvider;
 import pl.juraszek.sociabletests.domain.order.Order;
@@ -21,30 +22,33 @@ public class OrderService {
    private final OrderRepository orderRepository;
 
    /**
-    * Create order
+    * Create order with empty product basket
+    * Add products to order
     * Get Client
     * Check if client can make an order according to given policies
+    * Place order
     */
-   public Order makeOrder(@NonNull List<Product> products,@NonNull String clientId) {
+   public Order placeOrder(@NonNull List<Product> products, @NonNull String clientId) {
       Order order = Order.init(clientId);
       order.add(products);
-      return orderRepository.save(validateOrder(order, clientId));
+
+      clientProvider.fetchClient(clientId)
+            .ifPresentOrElse(client -> placeOrderForClient(order, client), () -> handleNotExistentClient(clientId));
+
+      return orderRepository.save(order);
    }
 
-   public Order makeOrder(Product product, @NonNull String clientId) {
-      Order order = Order.init(clientId);
-      order.add(product);
-      return orderRepository.save(validateOrder(order, clientId));
+   private void placeOrderForClient(Order order, Client client) {
+      order.place(client, orderAccessPolicy).getOrElse(() -> handleOrderPlacementFailure(order));
    }
 
-   private Order validateOrder(Order order, String clientId) {
-      return clientProvider.fetchClient(clientId)
-            .map(client -> order.canBeMade(client, orderAccessPolicy))
-            .map(orderState -> orderState.getOrElseThrow(productAccessExceptions -> {
-               throw productAccessExceptions;
-            }))
-            .orElseThrow(() -> {
-               throw new ClientAccessException(String.format("Client with given id %s not found!", clientId));
-            });
+   private Order handleOrderPlacementFailure(Order order) {
+      order.reject();
+      return order;
    }
+
+   private void handleNotExistentClient(String clientId) {
+      throw new ClientAccessException(String.format("Client with given id %s not found!", clientId));
+   }
+
 }

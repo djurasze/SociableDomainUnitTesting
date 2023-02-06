@@ -116,33 +116,42 @@ public class OrderService {
    private final OrderRepository orderRepository;
 
    /**
-    * Create order
+    * Create order with empty product basket
+    * Add products to order
     * Get Client
     * Check if client can make an order according to given policies
+    * Place order
     */
-   public Order makeOrder(String productId, int amount, String clientId) {
+   public Order placeOrder(@NonNull List<Product> products, @NonNull String clientId) {
       Order order = Order.init(clientId);
-      order.add(new Product(productId, amount));
-      return orderRepository.save(validateOrder(order, clientId));
+      order.add(products);
+
+      clientProvider.fetchClient(clientId)
+            .ifPresentOrElse(client -> placeOrderForClient(order, client), () -> handleNotExistentClient(clientId));
+
+      return orderRepository.save(order);
    }
 
-   private Order validateOrder(Order order, String clientId) {
-      return clientProvider.fetchClient(clientId)
-            .map(client -> order.canBeMade(client, orderAccessPolicy))
-            .map(orderState -> orderState.getOrElseThrow(productAccessExceptions -> {
-               throw productAccessExceptions;
-            }))
-            .orElseThrow(() -> {
-               throw new ClientAccessException(String.format("Client with given id %s not found!", clientId));
-            });
+   private void placeOrderForClient(Order order, Client client) {
+      order.place(client, orderAccessPolicy).getOrElse(() -> handleOrderPlacementFailure(order));
    }
+
+   private Order handleOrderPlacementFailure(Order order) {
+      order.reject();
+      return order;
+   }
+
+   private void handleNotExistentClient(String clientId) {
+      throw new ClientAccessException(String.format("Client with given id %s not found!", clientId));
+   }
+
 }
 
 ```
 
 ```
-public class OrderServiceTest {
-
+@ExtendWith(MockitoExtension.class)
+class SolitaryOrderServiceTest {
    @Mock
    private ClientProvider clientProvider;
    @Mock
@@ -154,36 +163,55 @@ public class OrderServiceTest {
    private OrderService orderService;
 
    @Test
-   public void shouldMakeValidOrder() {
-      // given
-      String productId = "product1";
-      int amount = 2;
-      String clientId = "client1";
-      Order order = Order.init(clientId);
-      order.add(new Product(productId, amount));
+   void shouldPlaceValidOrder() {
+      UUID id = UUID.randomUUID();
+      try (MockedStatic<UUID>  mockedUUID = mockStatic(UUID.class)) {
+         // given
+         mockedUUID.when(UUID::randomUUID).thenReturn(id);
 
-      Client client = new Client(clientId);
-      when(clientProvider.fetchClient(clientId)).thenReturn(Optional.of(client));
-      when(orderAccessPolicy.canMakeOrder(client, order)).thenReturn(true);
-      when(orderRepository.save(order)).thenReturn(order);
+         String productId = "product1";
+         int amount = 2;
+         String clientId = "client1";
+         Order intermediateOrder = Order.init(clientId);
+         List<Product> products = List.of(new Product(productId, amount));
+         intermediateOrder.add(products);
 
-      // when
-      Order result = orderService.makeOrder(productId, amount, clientId);
+         Order finalOrder = Order.init(clientId);
+         finalOrder.add(products);
+         ReflectionTestUtils.setField(finalOrder, "status", Order.Status.PLACED);
 
-      // then
-      assertThat(result).isEqualTo(order);
-      verify(clientProvider).fetchClient(clientId);
-      verify(orderAccessPolicy).canMakeOrder(client, order);
-      verify(orderRepository).save(order);
+
+
+         Client client = new Client(clientId, false);
+
+         // when
+         when(clientProvider.fetchClient(clientId)).thenReturn(Optional.of(client));
+         when(orderAccessPolicy.check(intermediateOrder, client)).thenReturn(Either.right(true));
+         when(orderRepository.save(finalOrder)).thenReturn(finalOrder);
+         Order result = orderService.placeOrder(products, clientId);
+
+         // then
+         assertThat(result).isNotNull();
+         assertThat(result.getId()).isNotBlank();
+         assertThat(result.getId()).isEqualTo(id.toString());
+         verify(clientProvider).fetchClient(clientId);
+         verify(orderAccessPolicy).check(finalOrder, client);
+         verify(orderRepository).save(finalOrder);
+      }
    }
-   
-   ...
+    ...
 }
 
 ```
-To test the `makeOrder` method, we need to create mocks
-of all its dependencies.
-This is a simple example, 
+
+In the above example, we had to mock a few services and the static UUID method.
+Of course static mock could be avoided by separating the UUID service provider and mocking it in our test.
+However, this would still require further mock configurations.
+Additionally, in this example, our mocks were strict, as we attempted to verify exact matches.
+This often becomes too tedious, leading us to opt for more generic mock setups using helper methods like `any()`.
+While this makes mock configuration easier, it also reduces the reliability and accuracy of our tests.
+
+This was a simple example, 
 in many cases there would be more dependencies in 
 that layer. However, it is important to test the 
 application layer as well. 
@@ -194,6 +222,8 @@ interactions between aggregates. Therefore,
 we want to know if our code correctly 
 delegates logic between those aggregates and any 
 external systems.
+
+
 
 The same holds true for mocking different policies or
 Value Objects that interact with each other within 
@@ -292,12 +322,14 @@ public class Order {
    
    ...
    
-   public void add(Product product) {
-      products.add(product);
+   public void add(List<Product> newProducts) {
+      if (isOrderActive()) {
+         products.addAll(newProducts);
+      }
    }
 
-   public Either<ProductAccessExceptions, Order> canBeMade(Client client, OrderAccessPolicy accessPolicy) {
-      return accessPolicy.check(this, client).map(aBoolean -> this);
+   public Either<ProductAccessExceptions, Order> place(Client client, OrderAccessPolicy accessPolicy) {
+      return accessPolicy.check(this, client).map(this::orderSuccessfullyPlaced);
    }
 }
 ```
@@ -306,12 +338,11 @@ In the above case, a simple `add(...)` method not only
 appends a record to a list, it changes the state of our
 aggregate and, at the same time, affects our business 
 rules. Although it returns nothing, we can still 
-validate our logic using the `canBeMade(...)`
+validate our logic using the `place(...)`
 method available for our aggregate and check whether it 
-works as expected. This way, we can easily check 
-the behavior of our aggregate without having to 
-look inside the code and validate the internal 
-state of the aggregate.
+works as expected. This form of assertion is 
+more focused on the domain. Instead of examining the technical 
+internals of our aggregate, we aim to validate it by verifying real business behaviors.
 
 ### Collaborator Based Isolation
 
@@ -455,44 +486,51 @@ class OrderServiceTest {
    private OrderService orderService;
 
    @Test
-   void shouldMakeOrder() {
+   void shouldSuccessfullyPlaceOrder() {
       //   given
       String clientId = "john_doe";
       String productId = "basic";
       int amount = 10;
+      Product product = new Product(productId, amount);
 
       //      when
-      Order order = orderService.makeOrder(productId, amount, clientId);
+      Order order = orderService.placeOrder(List.of(product), clientId);
 
       //      then
       assertThat(order).isNotNull();
       assertThat(order.getId()).isNotBlank();
       //Assert that the string is a valid UUID
       assertThat(order.getId()).matches(UUID_PATTERN);
+      assertThat(order.getStatus()).isEqualTo(Order.Status.PLACED);
    }
 
    @Test
-   void shouldNotMakeOrderWhenClientNotExists() {
+   void shouldThrowExceptionForOrderPlacementWhenClientNotExists() {
       //   given
       String clientId = "none";
       String productId = "premium_1";
       int amount = 10;
+      List<Product> products = List.of(new Product(productId, amount));
 
       //      when
-      assertThrows(ClientAccessException.class,
-            () -> orderService.makeOrder(productId, amount, clientId));
+      assertThrows(ClientAccessException.class, () -> orderService.placeOrder(products, clientId));
    }
 
    @Test
-   void shouldNotMakeOrderWhenProductNotAccessible() {
+   void shouldRejectOrderWhenProductNotAccessible() {
       //   given
       String clientId = "john_doe";
       String productId = "premium_1";
       int amount = 10;
+      Product product = new Product(productId, amount);
 
       //      when
-      assertThrows(ProductAccessExceptions.class,
-            () -> orderService.makeOrder(productId, amount, clientId));
+      Order order = orderService.placeOrder(List.of(product), clientId);
+
+      //      then
+      assertThat(order).isNotNull();
+      assertThat(order.getId()).isNotBlank();
+      assertThat(order.getStatus()).isEqualTo(Order.Status.REJECTED);
    }
 }
 ```

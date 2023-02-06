@@ -7,8 +7,8 @@ import pl.juraszek.sociabletests.domain.order.Order;
 import java.util.List;
 
 public record OrderDto(@JsonProperty(access = JsonProperty.Access.READ_ONLY) String id,
-                       @NotNull List<ProductDto> products, @NotNull String clientId) {
+                       @NotNull List<ProductDto> products, @NotNull String clientId, @JsonProperty(access = JsonProperty.Access.READ_ONLY) String status) {
    public static OrderDto of(Order order) {
-      return new OrderDto(order.getId(), ProductDto.of(order.getProducts()), order.getClientId());
+      return new OrderDto(order.getId(), ProductDto.of(order.getProducts()), order.getClientId(), order.getStatus().toString());
    }
 }
